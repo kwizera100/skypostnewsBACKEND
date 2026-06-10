@@ -90,7 +90,11 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 // ─── Start server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 IREMEE API running on http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV ?? 'development'}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Sky Post News API running on http://localhost:${PORT}`);
+    console.log(`   Environment: ${process.env.NODE_ENV ?? 'development'}`);
+  });
+}
+
+export default app;
