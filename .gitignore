@@ -3,3 +3,9 @@ dist/
 .env
 uploads/
 *.log
+.vercel
+.env*.local
+.env*.pull
+*.pull
+data-export.json
+prisma/dev.db

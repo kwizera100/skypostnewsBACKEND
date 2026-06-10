@@ -11,6 +11,7 @@ import categoriesRoutes from './routes/categories';
 import uploadRoutes from './routes/upload';
 import usersRoutes from './routes/users';
 import statsRoutes from './routes/stats';
+import settingsRoutes from './routes/settings';
 
 const app = express();
 const PORT = process.env.PORT ?? 4000;
@@ -77,6 +78,7 @@ app.use('/api/categories', categoriesRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
