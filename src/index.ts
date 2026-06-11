@@ -29,12 +29,23 @@ app.use(helmet({
     },
   },
 }));
+const allowedOrigins = [
+  process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  'http://localhost:5173',
+  'https://skypostnews.com',
+  'https://www.skypostnews.com',
+  'http://93.127.186.217',
+];
 app.use(
   cors({
-    origin: [
-      process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-      'http://93.127.186.217',
-    ],
+    origin: (origin, callback) => {
+      // Allow non-browser requests (no origin) and any Vercel preview deployment
+      if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(new URL(origin).hostname)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
