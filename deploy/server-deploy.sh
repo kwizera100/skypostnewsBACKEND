@@ -9,7 +9,7 @@ DB_USER=skypost_user
 DB_PASS="${SKYPOST_DB_PASS:?Set SKYPOST_DB_PASS}"
 API_DOMAIN=api.skypostnews.com
 FRONTEND_ORIGIN="https://www.skypostnews.com"
-PORT=4000
+PORT=5055
 
 echo "=== 1/7 Ensuring Postgres role + database (skypostnews only) ==="
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 \
@@ -59,27 +59,9 @@ pm2 delete skypost-api 2>/dev/null || true
 pm2 start dist/index.js --name skypost-api
 pm2 save
 
-echo "=== 7/7 Nginx reverse proxy (HTTP) ==="
-cat > /etc/nginx/sites-available/skypostnews-api <<EOF
-server {
-    listen 80;
-    server_name ${API_DOMAIN};
-
-    client_max_body_size 10M;
-
-    location / {
-        proxy_pass http://127.0.0.1:${PORT};
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
-ln -sf /etc/nginx/sites-available/skypostnews-api /etc/nginx/sites-enabled/skypostnews-api
-nginx -t
-systemctl reload nginx
+echo "=== 7/7 Nginx managed by CloudPanel ==="
+echo "Reverse proxy + SSL for ${API_DOMAIN} is managed via the CloudPanel UI"
+echo "(Reverse Proxy site -> http://127.0.0.1:${PORT}). No manual nginx changes here."
 
 echo "=== DONE. API should respond at http://127.0.0.1:${PORT}/api/health ==="
 curl -s http://127.0.0.1:${PORT}/api/health || true
