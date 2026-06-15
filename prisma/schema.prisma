@@ -65,6 +65,22 @@ model Setting {
   @@map("settings")
 }
 
+model AdBanner {
+  id        Int      @id @default(autoincrement())
+  position  String   @unique // 'left', 'center', 'right'
+  imageUrl  String   @map("image_url")
+  linkUrl   String?  @map("link_url")
+  altText   String?  @map("alt_text")
+  width     Int      @default(100) // percentage width
+  height    Int      @default(100) // pixel height
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("ad_banners")
+}
+
 enum Role {
   ADMIN
   EDITOR

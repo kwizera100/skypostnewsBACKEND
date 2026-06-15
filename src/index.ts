@@ -12,6 +12,7 @@ import uploadRoutes from './routes/upload';
 import usersRoutes from './routes/users';
 import statsRoutes from './routes/stats';
 import settingsRoutes from './routes/settings';
+import adsRoutes from './routes/ads';
 
 const app = express();
 const PORT = process.env.PORT ?? 4000;
@@ -28,6 +29,9 @@ app.use(helmet({
       'img-src': ["'self'", 'data:', 'https://web.archive.org', 'https://placehold.co'],
     },
   },
+  // Allow uploaded images/assets to be embedded by the frontend on a
+  // different origin (www.skypostnews.com loading from api.skypostnews.com).
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 const allowedOrigins = [
   process.env.CORS_ORIGIN ?? 'http://localhost:5173',
@@ -90,6 +94,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/ads', adsRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
