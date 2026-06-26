@@ -58,4 +58,59 @@ router.post(
   }
 );
 
+// PUT /api/categories/:id (Admin only)
+router.put(
+  '/:id',
+  authenticate,
+  requireRole('ADMIN'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      res.status(400).json({ error: 'Invalid category id' });
+      return;
+    }
+    const { name, slug, description, color } = req.body as {
+      name: string; slug: string; description?: string; color?: string;
+    };
+    if (!name || !slug) {
+      res.status(400).json({ error: 'Name and slug are required' });
+      return;
+    }
+    try {
+      const updated = await prisma.category.update({
+        where: { id },
+        data: { name, slug, description, color },
+      });
+      res.json(updated);
+    } catch {
+      res.status(500).json({ error: 'Failed to update category' });
+    }
+  }
+);
+
+// DELETE /api/categories/:id (Admin only)
+router.delete(
+  '/:id',
+  authenticate,
+  requireRole('ADMIN'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      res.status(400).json({ error: 'Invalid category id' });
+      return;
+    }
+    try {
+      const count = await prisma.article.count({ where: { categoryId: id } });
+      if (count > 0) {
+        res.status(409).json({ error: `Cannot delete: ${count} article(s) use this category` });
+        return;
+      }
+      await prisma.category.delete({ where: { id } });
+      res.json({ success: true });
+    } catch {
+      res.status(404).json({ error: 'Category not found' });
+    }
+  }
+);
+
 export default router;
