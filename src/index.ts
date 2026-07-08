@@ -17,9 +17,9 @@ import adsRoutes from './routes/ads';
 const app = express();
 const PORT = process.env.PORT ?? 4000;
 
-// Trust proxy chain. On Vercel multiple proxies sit in front of the function,
-// so we need a higher trust level for express-rate-limit to see the real client IP.
-app.set('trust proxy', process.env.VERCEL ? 3 : 1);
+// Trust proxy chain. The backend runs behind nginx (VPS) and Vercel's edge,
+// so express-rate-limit needs to read X-Forwarded-For to see the real client IP.
+app.set('trust proxy', 3);
 
 // ─── Security middleware ──────────────────────────────────────────────────────
 app.use(helmet({
