@@ -17,8 +17,9 @@ import adsRoutes from './routes/ads';
 const app = express();
 const PORT = process.env.PORT ?? 4000;
 
-// Trust Nginx reverse proxy (fixes express-rate-limit X-Forwarded-For error)
-app.set('trust proxy', 1);
+// Trust proxy chain. On Vercel multiple proxies sit in front of the function,
+// so we need a higher trust level for express-rate-limit to see the real client IP.
+app.set('trust proxy', process.env.VERCEL ? 3 : 1);
 
 // ─── Security middleware ──────────────────────────────────────────────────────
 app.use(helmet({
