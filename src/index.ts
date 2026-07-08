@@ -17,9 +17,10 @@ import adsRoutes from './routes/ads';
 const app = express();
 const PORT = process.env.PORT ?? 4000;
 
-// Trust proxy chain. The backend runs behind nginx (VPS) and Vercel's edge,
-// so express-rate-limit needs to read X-Forwarded-For to see the real client IP.
-app.set('trust proxy', 3);
+// Trust proxy chain. The backend runs behind nginx (VPS) and possibly multiple
+// upstream proxies. Trusting the proxy chain lets express-rate-limit read
+// X-Forwarded-For to see the real client IP instead of the edge/proxy IP.
+app.set('trust proxy', true);
 
 // ─── Security middleware ──────────────────────────────────────────────────────
 app.use(helmet({
@@ -57,14 +58,23 @@ app.use(
   })
 );
 
-// Global rate limiter: 200 req / 15 min per IP
+// Global rate limiter: 500 req / 15 min per real client IP.
+// Use the leftmost X-Forwarded-For IP so visitors behind shared proxies/CDNs
+// don't share a single rate-limit bucket.
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200,
+    max: 500,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many requests, please try again later.' },
+    keyGenerator: (req) => {
+      const forwarded = req.get('x-forwarded-for');
+      if (typeof forwarded === 'string' && forwarded) {
+        return forwarded.split(',')[0].trim();
+      }
+      return req.ip ?? 'unknown';
+    },
   })
 );
 
