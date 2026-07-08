@@ -20,8 +20,8 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
 // GET /api/categories/:slug
 router.get('/:slug', async (req: Request, res: Response): Promise<void> => {
   try {
-    const category = await prisma.category.findUnique({
-      where: { slug: req.params.slug },
+    const category = await prisma.category.findFirst({
+      where: { slug: { equals: req.params.slug, mode: 'insensitive' as const } },
       include: { _count: { select: { articles: { where: { published: true } } } } },
     });
     if (!category) {

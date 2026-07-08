@@ -45,7 +45,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
   const where = {
     published: true,
-    ...(categorySlug ? { category: { slug: categorySlug } } : {}),
+    ...(categorySlug ? { category: { slug: { equals: categorySlug, mode: 'insensitive' as const } } } : {}),
   };
 
   try {
