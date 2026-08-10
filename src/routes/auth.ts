@@ -41,13 +41,14 @@ router.post(
         select: { id: true, name: true, email: true, role: true },
       });
 
-      const secret = process.env.JWT_SECRET!;
+      const secret = process.env.JWT_SECRET || 'iremee_secret_key_for_development_12345678';
       const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, secret, {
         expiresIn: '7d',
       });
 
       res.status(201).json({ token, user });
-    } catch {
+    } catch (err) {
+      console.error('Register error:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -84,7 +85,7 @@ router.post(
         return;
       }
 
-      const secret = process.env.JWT_SECRET!;
+      const secret = process.env.JWT_SECRET || 'iremee_secret_key_for_development_12345678';
       const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, secret, {
         expiresIn: '7d',
       });
@@ -93,7 +94,8 @@ router.post(
         token,
         user: { id: user.id, name: user.name, email: user.email, role: user.role },
       });
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

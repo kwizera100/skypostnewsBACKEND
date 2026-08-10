@@ -14,19 +14,28 @@ const ARTICLE_SELECT = {
   thumbnailUrl: true,
   imageUrl: true,
   readTime: true,
+  language: true,
   publishedAt: true,
   published: true,
   views: true,
   category: { select: { id: true, name: true, slug: true, color: true } },
-  author: { select: { id: true, name: true } },
+  author: { select: { id: true, name: true, bio: true, avatarUrl: true, socialTwitter: true, socialFacebook: true, socialInstagram: true } },
 };
+
+const AUTHOR_SELECT = { id: true, name: true, bio: true, avatarUrl: true, socialTwitter: true, socialFacebook: true, socialInstagram: true };
+
+function getLang(req: Request): string {
+  const lang = (req.query.lang as string || req.headers['x-language'] as string || 'en').toLowerCase();
+  return ['en', 'fr', 'rw'].includes(lang) ? lang : 'en';
+}
 
 // GET /api/articles/latest?limit=5
 router.get('/latest', async (req: Request, res: Response): Promise<void> => {
   const limit = Math.min(parseInt(req.query.limit as string) || 5, 20);
+  const lang = getLang(req);
   try {
     const articles = await prisma.article.findMany({
-      where: { published: true },
+      where: { published: true, language: lang },
       orderBy: { publishedAt: 'desc' },
       take: limit,
       select: ARTICLE_SELECT,
@@ -42,9 +51,11 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   const page = Math.max(parseInt(req.query.page as string) || 1, 1);
   const pageSize = Math.min(parseInt(req.query.pageSize as string) || 8, 50);
   const categorySlug = req.query.categorySlug as string | undefined;
+  const lang = getLang(req);
 
   const where = {
     published: true,
+    language: lang,
     ...(categorySlug ? { category: { slug: { equals: categorySlug, mode: 'insensitive' as const } } } : {}),
   };
 
@@ -74,13 +85,29 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// GET /api/articles/by-author/:id
+router.get('/by-author/:id', async (req: Request, res: Response): Promise<void> => {
+  const authorId = parseInt(req.params.id);
+  const lang = getLang(req);
+  try {
+    const articles = await prisma.article.findMany({
+      where: { published: true, language: lang, authorId },
+      orderBy: { publishedAt: 'desc' },
+      select: { ...ARTICLE_SELECT, author: { select: AUTHOR_SELECT } },
+    });
+    res.json({ data: articles });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch articles by author' });
+  }
+});
+
 // GET /api/articles/by-id/:id (admin edit)
 router.get('/by-id/:id', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
   const id = parseInt(req.params.id);
   try {
     const article = await prisma.article.findUnique({
       where: { id },
-      select: { ...ARTICLE_SELECT, author: { select: { id: true, name: true } } },
+      select: { ...ARTICLE_SELECT, author: { select: AUTHOR_SELECT } },
     });
     if (!article) { res.status(404).json({ error: 'Article not found' }); return; }
     res.json(article);
@@ -94,7 +121,7 @@ router.get('/:slug', async (req: Request, res: Response): Promise<void> => {
   try {
     const article = await prisma.article.findUnique({
       where: { slug: req.params.slug },
-      select: { ...ARTICLE_SELECT, author: { select: { id: true, name: true } } },
+      select: { ...ARTICLE_SELECT, author: { select: AUTHOR_SELECT } },
     });
     if (!article || !article.published) {
       res.status(404).json({ error: 'Article not found' });

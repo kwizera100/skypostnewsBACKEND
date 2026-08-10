@@ -13,6 +13,7 @@ import usersRoutes from './routes/users';
 import statsRoutes from './routes/stats';
 import settingsRoutes from './routes/settings';
 import adsRoutes from './routes/ads';
+import subscribersRoutes from './routes/subscribers';
 
 const app = express();
 const PORT = process.env.PORT ?? 4000;
@@ -67,6 +68,7 @@ app.use(
     max: 500,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { trustProxy: false },
     message: { error: 'Too many requests, please try again later.' },
     keyGenerator: (req) => {
       const forwarded = req.get('x-forwarded-for');
@@ -82,6 +84,7 @@ app.use(
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
+  validate: { trustProxy: false },
   message: { error: 'Too many auth attempts, please wait.' },
 });
 
@@ -106,6 +109,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/ads', adsRoutes);
+app.use('/api/subscribers', subscribersRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
